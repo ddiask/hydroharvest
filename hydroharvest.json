@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "hydroharvest-163f1",
+  "private_key_id": "c67a1079a9aaf44989859f2734fc86a3a4466c97",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCUDQIQZeziEiFh\npfzE4NHOMlBTd5e3tsHH+B3xvHnwGqHZ9lZj64QInq6bAAsPitb1NN7k+ki50A7j\nMGzNCVYWtf7lQHteG4XqOuY41exX9H0QpdzVSga5ui/hzq+D1E1S10iCbBhn8Z1m\n7qz+JY2McNoa8TVRypr4Bx7U5ePzfTR9bqUCHJFL2psv1ZwtpRx7EyTUhUFTINcY\nZmRBYej09KIIpsglaKURXOX83LqqQ5fDilF+d7cxRtKf/G8LWz3+ZRBDlZgtL/XS\nYDZdSt2vdEwID3eMZcH7Myc+v61qoaGnmrCHgNNVATIO0OJ17AErz+VZSQDjy6yS\nXot3IzenAgMBAAECggEAAhcOhZpXj8SsJ/hZ6ywC8KN3mTx0+qj5b1zdv1qzz5a9\ndjN3rY1waonvv3+h24q2oihbuGVrWJ3K6zYoMw5qSR1koQPm04576eSbxdQI51Nf\nEjiyBDWfueHnaL6sOtlo0tfEzeKMx0FH9MelzyixXBKaLnGW5ekZ6vdFKvUPFMVI\nOA7IYWdjPPk1aHWjhCnKVg0/2mkQ1KU0iXAPn7PX23AM2EozNiOmEBkBANmydcj4\nAk3Fyd5dnCE8q9wQvuMORnbiHwa2a7cTygacaMWMy5COR6GNdww3tvzpZ/uKBPtK\nMfIOb0Uyzzorj+LaPQ3RJm8q4a/dequ8jwBBciN/4QKBgQDQNlaUsFpfHxC39C7C\nWDWIWweOl+6lilFr8aKiOH/BVq4usI8PGQppCwPYJyIyMKi9x+Bj1YlhWGxQR2Qo\nIZwvaz4YrYtmfXukrJ9VJ7kHitp9o+bQ0vOeBE2aDoWnT+yLawUazuCCtMbwubWn\nPTZQy800MbFSErkmsoTxRFr3KQKBgQC2B9cyBlb98gFXwkeQLSyzfa75nBI5sTnJ\nKUFqqfUz4ZfxUCqtHJ8JSx3B8xYIrHQrwSzV9pW3G3gdi9tKok2Cz0MjjPRuxfqf\n3exBj1doQzeRBgR88W0rmYgj6CJy3j8cF8T1+gc5YFDyg3oMbib3sX4tbo1mLH0Z\nNIPsi4GiTwKBgH3MFsuHMVK/Ri6eTZIGEXHs7cfta7aAt2jseUJhuG5rnJmA+y44\nBt4oVY5HNpX0aD8hgCVRYst5zRdDyvOkOuU7ei0WzV6C+i0oTqv4cAZqkk/OsyoA\nCkiyeOBXXdEUrOofItprm6Hc70WKLoJ4rVRrjfO3AleAEHWc7k2G6x7hAoGANKUr\n3bHrsuIs9T6hB9eo1/h/hH1Y4AqblcwyuTCSVADousfer9ZZQIzS/GbbdoK5znW+\nC9uXDTAKmzD5qSorlKtw1XVMtETZ6SZ7z7IvK15VUcIVxjTkx/lNYGUgoWwZgHx3\nYFSBhlyOzLStta6d4oEY5vbUOjqfq4x+owjt4w0CgYEAty0AGQiXi8kX+VJwGy6N\nrAH+aKMEeZnvXBEzFb5olUB0QIuxZwqiKGYBTBFiR3tWGUX2bTbP6tg5/80g1LJG\nuJmP2RcIbh1gKsfaT5DE0ICOB0O/DaVdXRsGg2P3mKQdoXxKSVOT79EKZZH/SDit\nRKbPJMJ7ygBBYEDYQOrtlPw=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-ryitq@hydroharvest-163f1.iam.gserviceaccount.com",
+  "client_id": "112045959206430684968",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-ryitq%40hydroharvest-163f1.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
