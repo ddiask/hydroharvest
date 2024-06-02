@@ -4,6 +4,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import entity.Client;
 import entity.Crop;
 import entity.CropsEnum;
+import entity.System;
 import entity.Water;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -28,6 +29,7 @@ public interface ClientAPI {
     String GET_WEATHER="/getWeather";
     String WATERING_FORECAST="/wateringForecast";
     String USER_EXISTS="/userExists";
+    String ADD_SYSTEM="/addSystem";
     String CROP_ID="cropId";
     String SYSTEM_IP="systemIp";
     String NAME="name";
@@ -135,4 +137,13 @@ public interface ClientAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     Response userExists(@QueryParam(USER_ID)String userId) throws ExecutionException, InterruptedException;
+
+    @Path(ADD_SYSTEM+"/{"+CROP_ID+"}")
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    Response addSystem(@PathParam(CROP_ID) String systemId,
+                       @QueryParam(USER_ID)String userId,
+                       @QueryParam(PASSWORD) String password,
+                       System system) throws ExecutionException, InterruptedException;
 }

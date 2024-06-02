@@ -544,6 +544,45 @@ public class ClientAPImpl implements ClientAPI{
 
     }
 
+    @Override
+    public Response addSystem(String systemId, String userId, String pwd, System system) throws ExecutionException, InterruptedException {
+        DocumentReference docRef = instance.db.collection(USERS).document(userId);
+        ApiFuture<DocumentSnapshot> future =docRef.get();
+        DocumentSnapshot document = future.get();
+        if (!document.exists()) {
+            java.lang.System.out.println("OLA");
+            return Response.status(409).build();
+        }
+        Integer password= userCredentials.get(userId);
+        if(password==null) {
+            password= (int) (long) document.get(PASSWORD);
+            userCredentials.put(userId, password);
+        }
+        if(password!=pwd.hashCode())
+            return Response.status(403).build();
+        DocumentReference docRefCrops= instance.db.collection(CROPS).document(systemId);
+        DocumentSnapshot documentReference= docRefCrops.get().get();
+        if(!documentReference.exists()) {
+            java.lang.System.out.println("ole");
+            return Response.status(409).build();
+        }
+        DocumentReference r=docRefCrops.collection(SYSTEMS).document(system.getIp());
+        if(r.get().get().exists()){
+            java.lang.System.out.println("eeee");
+            return Response.status(409).build();
+        }
+        Map<String, Object> data = new HashMap<>();
+        GeoPoint point = new GeoPoint(system.getLatitude(),system.getLongitude());
+        data.put(LOCATION, point);
+        data.put(NAME, system.getName());
+        Map<String,Object> systemData= new HashMap<>();
+        systemData.put(SYSTEM,docRefCrops.getId());
+        instance.db.collection(SYSTEMS).document(system.getIp()).set(systemData);
+        r.set(data);
+
+        return Response.accepted().build();
+    }
+
     @Scheduled(cron="0 1 0 * * ?")
     void cronJob(ScheduledExecution execution) throws ExecutionException, InterruptedException, UnirestException, JsonProcessingException {
         Iterable<DocumentReference> iterable = instance.db.collection(CROPS).listDocuments();
