@@ -440,7 +440,9 @@ public class ClientAPImpl implements ClientAPI{
                 }
                 systemsList.add(sd);
             }
-            String cropStatus=convertPointsToStatus(totalPoints/ systemsList.size());
+            String cropStatus= (systemsList.size()!=0)
+                    ?convertPointsToStatus(totalPoints / systemsList.size())
+                    : OK;
             CropDetailed entity= new CropDetailed(systemsList,name,location,cropType,cropStatus,cropId,image);
             cropsDetails.add(entity);
         }
