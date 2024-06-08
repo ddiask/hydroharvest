@@ -10,6 +10,7 @@ import firebase.FirebaseClass;
 import jakarta.ws.rs.core.Response;
 
 import java.io.IOException;
+import java.lang.System;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ public class UbiquitousAPImpl implements UbiquitousAPI{
     private static final String CULTURE="Culture";
     private static final String Begin="Begin";
     private static final String END="End";
+    private static final String DONE="Done";
     public FirebaseClass instance= FirebaseClass.getInstance();
 
     public UbiquitousAPImpl() throws IOException {
@@ -90,14 +92,18 @@ public class UbiquitousAPImpl implements UbiquitousAPI{
             map.put(TEMPERATURE_LEVEL, temperature);
             docRefAverage.update(map);
         }
-        //Get next
         Iterable<DocumentReference> d =docRef.collection(WATERING).listDocuments();
         long resStart=-1;
         long resFinal=-1;
         for (DocumentReference reference: d){
             DocumentSnapshot snap=reference.get().get();
             Timestamp timestamp= (Timestamp) snap.get(Begin);
+            Timestamp endTimestamp= (Timestamp) snap.get(END);
+            boolean done= (boolean) snap.get(DONE);
             long leftTime=(timestamp.getSeconds())-Timestamp.now().getSeconds();
+            if(endTimestamp.getSeconds()<Timestamp.now().getSeconds() && !done){
+                reference.update(DONE,true);
+            }
             if(leftTime<300 && leftTime>0){
                 resStart=leftTime*1000;
                 Timestamp t= (Timestamp) snap.get(END);
@@ -124,11 +130,12 @@ public class UbiquitousAPImpl implements UbiquitousAPI{
         Calendar time= Calendar.getInstance();
         time.setTime(date);
         int hours= time.get(Calendar.HOUR_OF_DAY);
+        System.out.println("As horas sao: "+hours);
         if(hours<=7)
             return NIGHT;
         else if (hours<=12)
             return MORNING;
-        else if(hours<=20)
+        else if(hours>=20)
             return AFTERNOON;
         else
             return EVENING;

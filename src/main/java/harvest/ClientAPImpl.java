@@ -10,13 +10,12 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import entity.*;
 import entity.System;
+import entity.Weather;
 import firebase.FirebaseClass;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.scheduler.Scheduled;
 import io.quarkus.scheduler.ScheduledExecution;
-import ipma.ForecastData;
-import ipma.Regions;
-import ipma.WeatherForecast;
+import ipma.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.Startup;
@@ -74,10 +73,13 @@ public class ClientAPImpl implements ClientAPI{
     private static final String NIGHT="night";
     private static final String NIGHT_YESTERDAY="yesterday_night";
     private static final String NO_DATA_TO_PREDICT="There is not enough data to forecast watering.";
+    private static final String YESTERDAY="yesterday";
+    private static final String TODAY="today";
+    private static final String TOMORROW="tomorrow";
     private final FirebaseClass instance= FirebaseClass.getInstance();
     private final Map<String,Integer> userCredentials=new HashMap<>();
     private final Map<String,CropInformation> cropInformationMap=new HashMap<>();
-    HashMap<Integer, HashMap<String,ForecastData>> weather=new HashMap<>(35);
+    HashMap<Integer, HashMap<String,Weather>> weather=new HashMap<>(35);
 
     public ClientAPImpl() throws IOException {
     }
@@ -365,11 +367,7 @@ public class ClientAPImpl implements ClientAPI{
             Timestamp begin= (Timestamp) ds.get(Begin);
             Timestamp end= (Timestamp) ds.get(END);
             boolean done= (boolean) ds.get(DONE);
-            Calendar calendarEnd=Calendar.getInstance();
-            calendarEnd.setTime(end.toDate());
-            Calendar calendarStart=Calendar.getInstance();
-            calendarEnd.setTime(begin.toDate());;
-            WaterClient water= new WaterClient(calendarStart,calendarEnd,done);
+            WaterClient water= new WaterClient(begin.toDate(),end.toDate(),done);
             watering.add(water);
         }
         return Response.accepted(watering).build();
@@ -472,15 +470,31 @@ public class ClientAPImpl implements ClientAPI{
                     .asString();
             WeatherForecast forecast = objectMapper.readValue(response.getBody(), WeatherForecast.class);
             for(ForecastData d: forecast.getData()){
+                String precipitation= d.getClassPrecInt()==null ? "None" : Precipitation.convertId(d.getClassPrecInt());
                 if(weather.get(d.getGlobalIdLocal())==null){
-                    HashMap<String, ForecastData> data= new HashMap<>(3);
-                    data.put(forecast.getForecastDate(), d);
+                    HashMap<String, Weather> data= new HashMap<>(3);
+                    Weather w= new Weather(Wind.convertId(d.getClassWindSpeed()),
+                            precipitation, d.getPrecipitaProb(),
+                            d.getPredWindDir(),d.getTMax(), d.getTMin(), ipma.Weather.convertId(d.getIdWeatherType()));
+                    data.put(convertDay(i), w);
                     weather.put(d.getGlobalIdLocal(), data);
                 }else{
-                    HashMap<String, ForecastData> data= weather.get(d.getGlobalIdLocal());
-                    data.put(forecast.getForecastDate(), d);
+                    Weather w= new Weather(Wind.convertId(d.getClassWindSpeed()),
+                            precipitation, d.getPrecipitaProb(),
+                            d.getPredWindDir(),d.getTMax(), d.getTMin(), ipma.Weather.convertId(d.getIdWeatherType()));
+                    HashMap<String, Weather> data= weather.get(d.getGlobalIdLocal());
+                    data.put(convertDay(i), w);
                 }
             }
+        }
+    }
+
+    private String convertDay(int day){
+        switch (day){
+            case 0:return YESTERDAY;
+            case 1:return TODAY;
+            case 2:return TOMORROW;
+            default: return null;
         }
     }
 
@@ -507,30 +521,39 @@ public class ClientAPImpl implements ClientAPI{
             return Response.status(409).build();
         DocumentReference data= system.collection(DATA).document(MOST_RECENT);
         DocumentSnapshot snapshot=data.get().get();
-        Calendar forecast= Calendar.getInstance();
+        Calendar start= Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        Calendar end= Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         if(!snapshot.exists())
-            return Response.accepted(NO_DATA_TO_PREDICT).build();
-        else{
-            DocumentSnapshot systemSnapshot=ref.document(systemId).get().get();
-            String cropString= (String) systemSnapshot.get(CROP);
-            double humidity= (double)snapshot.get(HUMIDITY_LEVEL);
-            double light= (double)snapshot.get(LIGHT_LEVEL);
-            double tank= (double)snapshot.get(TANK_LEVEL);
-            double temperature= (double)snapshot.get(TEMPERATURE_LEVEL);
-            int points=calculateState(cropString, humidity, temperature,tank);
-            String status= convertPointsToStatus(points);
-            Date date= Timestamp.now().toDate();
-            String period=getPeriod(date);
-            if(status.equals(GOOD)){
-                forecast.add(Calendar.DATE,1);
-                forecast.add(Calendar.HOUR_OF_DAY, 21);
-            }else if(period.equals(NIGHT)){
-                forecast.add(Calendar.HOUR_OF_DAY, 7);
+            return Response.accepted(new Forecast(null,null)).build();
+        else {
+            DocumentSnapshot systemSnapshot = ref.document(systemId).get().get();
+            String cropString = (String) systemSnapshot.get(CROP);
+            double humidity = (double) snapshot.get(HUMIDITY_LEVEL);
+            double tank = (double) snapshot.get(TANK_LEVEL);
+            double temperature = (double) snapshot.get(TEMPERATURE_LEVEL);
+            int points = calculateState(cropString, humidity, temperature, tank);
+            String status = convertPointsToStatus(points);
+            Date date = Timestamp.now().toDate();
+            String period = getPeriod(date);
+            if (status.equals(GOOD)) {
+                java.lang.System.out.println("Sou louco");
+                start.add(Calendar.DATE, 1);
+                start.set(Calendar.HOUR_OF_DAY, 21);
+                end.add(Calendar.DATE, 1);
+                end.set(Calendar.HOUR_OF_DAY, 22);
+            } else if (period.equals(NIGHT)) {
+                start.set(Calendar.HOUR_OF_DAY, 7);
+                end.set(Calendar.HOUR_OF_DAY, 8);
+            } else if (period.equals(AFTERNOON) || period.equals(MORNING)){
+                start.add(Calendar.MINUTE, 30);
+                end.set(Calendar.MINUTE, 90);
             }else{
-                forecast.add(Calendar.HOUR_OF_DAY, 21);
+                java.lang.System.out.println(period);
+                start.set(Calendar.HOUR_OF_DAY, 21);
+                end.set(Calendar.HOUR_OF_DAY, 22);
             }
         }
-        return Response.ok(forecast).build();
+        return Response.ok(new Forecast(start,end)).build();
     }
 
     @Override
@@ -550,7 +573,6 @@ public class ClientAPImpl implements ClientAPI{
         ApiFuture<DocumentSnapshot> future =docRef.get();
         DocumentSnapshot document = future.get();
         if (!document.exists()) {
-            java.lang.System.out.println("OLA");
             return Response.status(409).build();
         }
         Integer password= userCredentials.get(userId);
@@ -563,12 +585,10 @@ public class ClientAPImpl implements ClientAPI{
         DocumentReference docRefCrops= instance.db.collection(CROPS).document(systemId);
         DocumentSnapshot documentReference= docRefCrops.get().get();
         if(!documentReference.exists()) {
-            java.lang.System.out.println("ole");
             return Response.status(409).build();
         }
         DocumentReference r=docRefCrops.collection(SYSTEMS).document(system.getIp());
         if(r.get().get().exists()){
-            java.lang.System.out.println("eeee");
             return Response.status(409).build();
         }
         Map<String, Object> data = new HashMap<>();
