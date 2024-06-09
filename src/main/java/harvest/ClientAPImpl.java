@@ -184,14 +184,22 @@ public class ClientAPImpl implements ClientAPI{
     }
 
     @Override
-    public Response addUserToCrop(String systemId, String userIdToAdd,String userId, String password) throws ExecutionException, InterruptedException {
-        //Verify if user to add exists
-        DocumentReference docRef = instance.db.collection(USERS).document(userIdToAdd);
-        ApiFuture<DocumentSnapshot> future =docRef.get();
-        DocumentSnapshot document = future.get();
-        if (!document.exists())
+    public Response addUserToCrop(String systemId, String userMail,String userId, String password) throws ExecutionException, InterruptedException {
+
+        Iterable<DocumentReference> iterator = instance.db.collection(USERS).listDocuments();
+        DocumentReference docRef=null;
+        String userIdToAdd=null;
+        for (DocumentReference doc: iterator){
+            DocumentSnapshot snap=doc.get().get();
+            String mail=(String) snap.get(MAIL);
+            if (mail.equals(userMail)){
+                docRef=doc;
+                userIdToAdd= doc.getId();
+                break;
+            }
+        }
+        if(docRef==null)
             return Response.status(409).build();
-        //Verify if user exists and password is correct
         DocumentReference ref =instance.db.collection(CROPS).document(systemId).collection(USERS).document(userId);
         if(!ref.get().get().exists())
             return Response.status(409).build();
@@ -401,7 +409,7 @@ public class ClientAPImpl implements ClientAPI{
             String name= (String) infCrop.get(NAME);//isto
             String location= (String) infCrop.get(LOCATION);//isto
             CropInformation inf= cropInformationMap.get(cropString);
-            String image; //isto
+            String image;
             if (inf==null) {
                 DocumentReference information = instance.db.collection(CULTURE).document(cropString);
                 DocumentSnapshot ds = information.get().get();
