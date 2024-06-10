@@ -24,6 +24,7 @@ public interface ClientAPI {
     String CHANGE_NAME_SYSTEM="/changeSystemName";
     String ADD_WATER="/addWater";
     String GET_WATER="/getWater";
+    String GET_CROP="/getCrop";
     String GET_ALL_CROPS="/getAllCrops";
     String GET_INFORMATION="/getInformation";
     String GET_WEATHER="/getWeather";
@@ -146,4 +147,12 @@ public interface ClientAPI {
                        @QueryParam(USER_ID)String userId,
                        @QueryParam(PASSWORD) String password,
                        System system) throws ExecutionException, InterruptedException;
+
+    @Path(GET_CROP+"/{"+CROP_ID+"}")
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    Response getCrop(@PathParam(CROP_ID) String systemId,
+                       @QueryParam(USER_ID)String userId,
+                       @QueryParam(PASSWORD) String password) throws ExecutionException, InterruptedException;
 }

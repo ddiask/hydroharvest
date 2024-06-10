@@ -17,11 +17,14 @@ public interface UbiquitousAPI {
     String GET_INFORMATION="/getInformation";
     String PLANT="plant";
 
+
     @Path(ADD_DATA)
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     Response addData(SensorData data) throws ExecutionException, InterruptedException;
+
+
 
     @Path(GET_INFORMATION)
     @GET

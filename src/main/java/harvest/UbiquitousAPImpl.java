@@ -113,6 +113,7 @@ public class UbiquitousAPImpl implements UbiquitousAPI{
         return Response.accepted(new DataWatering(resStart,resFinal)).build();
     }
 
+
     @Override
     public Response getInformation(CropsEnum crop) throws ExecutionException, InterruptedException {
         String plant= transformEnumToString(crop);

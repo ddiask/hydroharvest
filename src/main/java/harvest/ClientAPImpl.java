@@ -381,6 +381,7 @@ public class ClientAPImpl implements ClientAPI{
         return Response.accepted(watering).build();
     }
 
+
     @Override
     public Response getAllCrops(String userId, String password) throws ExecutionException, InterruptedException {
         DocumentReference docRef = instance.db.collection(USERS).document(userId);
@@ -611,6 +612,8 @@ public class ClientAPImpl implements ClientAPI{
         return Response.accepted().build();
     }
 
+
+
     @Scheduled(cron="0 1 0 * * ?")
     void cronJob(ScheduledExecution execution) throws ExecutionException, InterruptedException, UnirestException, JsonProcessingException {
         Iterable<DocumentReference> iterable = instance.db.collection(CROPS).listDocuments();
@@ -654,6 +657,73 @@ public class ClientAPImpl implements ClientAPI{
             ref.getParent().document(yesterday_period).set(Objects.requireNonNull(snapshot.getData()));
             ref.delete();
         }
+    }
+
+    @Override
+    public Response getCrop(String systemId, String userId, String password) throws ExecutionException, InterruptedException {
+        DocumentReference docRef = instance.db.collection(USERS).document(userId);
+        ApiFuture<DocumentSnapshot> future =docRef.get();
+        DocumentSnapshot document = future.get();
+        if (!document.exists())
+            return Response.status(409).build();
+        Integer pwd= userCredentials.get(userId);
+        if(pwd==null) {
+            pwd= (int) (long) document.get(PASSWORD);
+            userCredentials.put(userId, pwd);
+        }
+        if(pwd!=password.hashCode())
+            return Response.status(403).build();
+        DocumentReference cropRef=instance.db.collection(CROPS).document(systemId);
+        if(!cropRef.get().get().exists())
+            return Response.status(404).build();
+        DocumentSnapshot infCrop=cropRef.get().get();
+        String cropString=(String) infCrop.get(CROP);
+        CropsEnum cropType=transformStringToEnum(cropString);//isto
+        String name= (String) infCrop.get(NAME);//isto
+        String location= (String) infCrop.get(LOCATION);//isto
+        CropInformation inf= cropInformationMap.get(cropString);
+        String image;
+        if (inf==null) {
+            DocumentReference information = instance.db.collection(CULTURE).document(cropString);
+            DocumentSnapshot ds = information.get().get();
+            image = (String) ds.get(IMAGE);
+        }else{
+            image=inf.getImage();
+        }
+        List<SystemDetailed> systemsList= new ArrayList<>();
+        Iterable<DocumentReference> systems= cropRef.collection(SYSTEMS).listDocuments();
+        int totalPoints=0;
+        for (DocumentReference system: systems){
+            String id=system.getId();
+            DocumentSnapshot generalInformation= system.get().get();
+            String systemName= (String) generalInformation.get(NAME);
+            GeoPoint systemLocation= (GeoPoint)  generalInformation.get(LOCATION);
+            DocumentReference systemData=system.collection(DATA).document(MOST_RECENT);
+            DocumentSnapshot dataSnapshot= systemData.get().get();
+            SystemDetailed sd;
+            if(!dataSnapshot.exists()){
+                sd= new SystemDetailed(systemLocation.getLatitude(),
+                        systemLocation.getLongitude(),id,systemName,-1,
+                        -1,-1,-1,NO_DATA);
+            }else{
+                double humidity= (double)dataSnapshot.get(HUMIDITY_LEVEL);
+                double light= (double)dataSnapshot.get(LIGHT_LEVEL);
+                double tank= (double)dataSnapshot.get(TANK_LEVEL);
+                double temperature= (double)dataSnapshot.get(TEMPERATURE_LEVEL);
+                int points=calculateState(cropString, humidity, temperature,tank);
+                String status= convertPointsToStatus(points);
+                sd= new SystemDetailed(systemLocation.getLatitude(),
+                        systemLocation.getLongitude(),id,systemName,humidity,
+                        light,tank,temperature,status);
+                totalPoints+=points;
+            }
+            systemsList.add(sd);
+        }
+        String cropStatus= (systemsList.size()!=0)
+                ?convertPointsToStatus(totalPoints / systemsList.size())
+                : OK;
+        CropDetailed entity= new CropDetailed(systemsList,name,location,cropType,cropStatus,systemId,image);
+        return Response.accepted(entity).build();
     }
 
 
